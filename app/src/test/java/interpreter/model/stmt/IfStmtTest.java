@@ -30,6 +30,17 @@ class IfStmtTest {
     }
 
     @Test
+    void falseConditionPushesElseStatement() throws MyException {
+        IStmt thenS = new NopStmt();
+        IStmt elseS = new PrintStmt(new ValueExp(new IntValue(0)));
+        IStmt stmt = new IfStmt(new ValueExp(new BoolValue(false)), thenS, elseS);
+
+        stmt.execute(state);
+
+        assertEquals(elseS, state.getExeStack().pop());
+    }
+
+    @Test
     void nonBooleanConditionThrows() {
         IStmt stmt = new IfStmt(new ValueExp(new IntValue(1)), new NopStmt(), new NopStmt());
         var ex = assertThrows(StatementException.class, () -> stmt.execute(state));
