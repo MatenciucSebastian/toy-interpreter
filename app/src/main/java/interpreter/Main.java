@@ -3,12 +3,11 @@
  */
 package interpreter;
 
-public class Main {
-    public String getGreeting() {
-        return "Hello World!";
-    }
+import interpreter.view.TextMenu;
 
+public class Main {
     public static void main(String[] args) {
-        System.out.println(new Main().getGreeting());
+        TextMenu menu = new TextMenu();
+        menu.start();
     }
 }
