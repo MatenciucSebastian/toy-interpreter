@@ -1,53 +1,31 @@
 package interpreter.view;
 
-import interpreter.controller.Controller;
-import interpreter.exceptions.MyException;
-import interpreter.model.PrgState;
-import interpreter.model.stmt.IStmt;
-import interpreter.repository.IRepository;
-import interpreter.repository.Repository;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 public class TextMenu {
-    public void start() {
+    private final Map<String, Command> commands = new LinkedHashMap<>();
+
+    public void addCommand(Command c) { commands.put(c.getKey(), c); }
+
+    private void printMenu() {
+        for (Command c : commands.values())
+            System.out.printf("%4s : %s%n", c.getKey(), c.getDescription());
+    }
+
+    public void show() {
         Scanner scanner = new Scanner(System.in);
-
         while (true) {
-            System.out.println("\n--- Toy Language Interpreter ---");
-            System.out.println("1. Run Example 1: " + Examples.EX1);
-            System.out.println("2. Run Example 2: " + Examples.EX2);
-            System.out.println("3. Run Example 3: " + Examples.EX3);
-            System.out.println("0. Exit");
-            System.out.print("Select an option: ");
-
-            String option = scanner.nextLine();
-            if (option.equals("0")) {
-                break;
+            printMenu();
+            System.out.print("Input the option: ");
+            if (!scanner.hasNextLine()) return;
+            Command c = commands.get(scanner.nextLine().strip());
+            if (c == null) {
+                System.out.println("Invalid option");
+                continue;
             }
-
-            IStmt program;
-            switch (option) {
-                case "1" -> program = Examples.EX1;
-                case "2" -> program = Examples.EX2;
-                case "3" -> program = Examples.EX3;
-                default -> {
-                    System.out.println("Invalid option. Please try again.");
-                    continue;
-                }
-            }
-
-            try {
-                PrgState state = PrgState.of(program);
-                IRepository repo = new Repository(state, "log" + option + ".txt");
-                Controller controller = new Controller(repo, true);
-
-                System.out.println("\n--- Execution Trace ---");
-                controller.allStep();
-            } catch (MyException e) {
-                System.out.println("\n[ERROR]: " + e.getMessage());
-            }
+            c.execute();
         }
-
-        scanner.close();
     }
 }
