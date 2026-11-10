@@ -31,4 +31,30 @@ public class Examples {
                                     new AssignStmt("v", new ValueExp(new IntValue(2))),
                                     new AssignStmt("v", new ValueExp(new IntValue(3)))),
                                     new PrintStmt(new VarExp("v"))))));
+
+    // string varf; varf=fileName; openRFile(varf); int varc; readFile(varf, varc); print(varc);
+    // readFile(varf, varc); print(varc); closeRFile(varf)
+    public static IStmt fileExample(String fileName) {
+        return new CompStmt(new VarDeclStmt("varf", new StringType()),
+                new CompStmt(new AssignStmt("varf", new ValueExp(new StringValue(fileName))),
+                        new CompStmt(new OpenRFileStmt(new VarExp("varf")),
+                                new CompStmt(new VarDeclStmt("varc", new IntType()),
+                                        new CompStmt(new ReadFileStmt(new VarExp("varf"), "varc"),
+                                                new CompStmt(new PrintStmt(new VarExp("varc")),
+                                                        new CompStmt(new ReadFileStmt(new VarExp("varf"), "varc"),
+                                                                new CompStmt(new PrintStmt(new VarExp("varc")),
+                                                                        new CloseRFileStmt(new VarExp("varf"))))))))));
+    }
+
+    // Ex4: the file example on test.in (in the project root) - prints 15, 50
+    public static final IStmt EX4 = fileExample("test.in");
+
+    // Ex5: int a; int b; a=5; b=7; (if a<b then print(a) else print(b)) - prints 5
+    public static final IStmt EX5 = new CompStmt(new VarDeclStmt("a", new IntType()),
+            new CompStmt(new VarDeclStmt("b", new IntType()),
+                    new CompStmt(new AssignStmt("a", new ValueExp(new IntValue(5))),
+                            new CompStmt(new AssignStmt("b", new ValueExp(new IntValue(7))),
+                                    new IfStmt(new RelationalExp(RelOp.LT, new VarExp("a"), new VarExp("b")),
+                                            new PrintStmt(new VarExp("a")),
+                                            new PrintStmt(new VarExp("b")))))));
 }
