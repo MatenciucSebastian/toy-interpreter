@@ -3,21 +3,25 @@ package interpreter.controller;
 import interpreter.exceptions.MyException;
 import interpreter.exceptions.StatementException;
 import interpreter.model.PrgState;
-import interpreter.model.adt.*;
 import interpreter.model.stmt.IStmt;
 import interpreter.model.stmt.NopStmt;
 import interpreter.model.value.IntValue;
-import interpreter.repository.IRepository;
 import interpreter.repository.Repository;
 import interpreter.view.Examples;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ControllerTest {
+    @TempDir
+    Path dir;
 
-    private static PrgState run(IStmt program) throws MyException {
+    private PrgState run(IStmt program) throws MyException {
         PrgState state = PrgState.of(program);
-        new Controller(new Repository(state), false).allStep();
+        var repo = new Repository(state, dir.resolve("log.txt").toString());
+        new Controller(repo, false).allStep();
         return state;
     }
 
@@ -47,10 +51,25 @@ class ControllerTest {
         PrgState state = PrgState.of(new NopStmt());
         state.getExeStack().pop();
 
-        IRepository repo = new Repository(state);
-        Controller controller = new Controller(repo, false);
+        Controller controller = new Controller(new Repository(state, dir.resolve("log.txt").toString()), false);
 
         var ex = assertThrows(StatementException.class, () -> controller.oneStep(state));
         assertTrue(ex.getMessage().contains("stack is empty"));
+    }
+
+    @Test
+    void logFileContainsTheFourSectionsInOrder() throws Exception {
+        run(Examples.EX1);
+        String log = Files.readString(dir.resolve("log.txt"));
+        int a = log.indexOf("ExeStack:"), b = log.indexOf("SymTable:"),
+                c = log.indexOf("Out:"), d = log.indexOf("FileTable:");
+        assertTrue(0 <= a && a < b && b < c && c < d);
+    }
+
+    @Test
+    void logFileHasTheInitialStateAndOneStateAfterEveryStep() throws Exception {
+        run(Examples.EX1);
+        String log = Files.readString(dir.resolve("log.txt"));
+        assertEquals(6, log.lines().filter("ExeStack:"::equals).count());
     }
 }
