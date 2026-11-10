@@ -1,5 +1,7 @@
 package interpreter.model.adt;
 import interpreter.exceptions.ADTException;
+
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,6 +23,15 @@ public class MyDictionary<K, V> implements IDictionary<K, V> {
     @Override public void update(K key, V value) throws ADTException {
         if (!isDefined(key)) throw new ADTException("Key " + key + " not found to update");
         map.put(key, value);
+    }
+
+    @Override public void remove(K key) throws ADTException {
+        if (!isDefined(key)) throw new ADTException("Key " + key + " not found to remove");
+        map.remove(key);
+    }
+
+    @Override public Map<K, V> toMap() {
+        return Collections.unmodifiableMap(new HashMap<>(map));
     }
 
     @Override public String toString() { return map.toString(); }
