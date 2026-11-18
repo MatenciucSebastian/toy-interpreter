@@ -2,6 +2,7 @@ package interpreter.model.type;
 
 import interpreter.model.value.BoolValue;
 import interpreter.model.value.IntValue;
+import interpreter.model.value.RefValue;
 import interpreter.model.value.StringValue;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,5 +37,27 @@ class TypeTest {
     @Test
     void stringTypeIsPrintedAsString() {
         assertEquals("string", new StringType().toString());
+    }
+
+    @Test
+    void refTypeDefaultValueIsTheNullReference() {
+        assertEquals(new RefValue(0, new IntType()), new RefType(new IntType()).defaultValue());
+        assertEquals(new RefValue(0, new RefType(new BoolType())),
+                new RefType(new RefType(new BoolType())).defaultValue());
+    }
+
+    @Test
+    void nestedRefTypesAreComparedRecursively() {
+        IType refRefInt = new RefType(new RefType(new IntType()));
+        assertEquals(refRefInt, new RefType(new RefType(new IntType())));
+        assertEquals(refRefInt.hashCode(), new RefType(new RefType(new IntType())).hashCode());
+        assertNotEquals(refRefInt, new RefType(new IntType()));
+        assertNotEquals(refRefInt, new RefType(new RefType(new BoolType())));
+        assertNotEquals(new RefType(new IntType()), new IntType());
+    }
+
+    @Test
+    void refTypeIsPrintedWithItsInnerType() {
+        assertEquals("Ref(Ref(int))", new RefType(new RefType(new IntType())).toString());
     }
 }
