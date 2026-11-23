@@ -3,7 +3,9 @@ package interpreter.model.exp;
 import interpreter.exceptions.ExpressionException;
 import interpreter.exceptions.MyException;
 import interpreter.model.adt.IDictionary;
+import interpreter.model.adt.IHeap;
 import interpreter.model.adt.MyDictionary;
+import interpreter.model.adt.MyHeap;
 import interpreter.model.value.IValue;
 import interpreter.model.value.IntValue;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class VarExpTest {
     private IDictionary<String, IValue> symTable;
+    private final IHeap heap = new MyHeap();
 
     @BeforeEach
     void setUp() {
@@ -22,13 +25,13 @@ class VarExpTest {
     void retrievesDefinedVariable() throws MyException {
         symTable.put("x", new IntValue(5));
         IExp e = new VarExp("x");
-        assertEquals(new IntValue(5), e.eval(symTable));
+        assertEquals(new IntValue(5), e.eval(symTable, heap));
     }
 
     @Test
     void undefinedVariableThrows() {
         IExp e = new VarExp("missingVar");
-        var ex = assertThrows(ExpressionException.class, () -> e.eval(symTable));
+        var ex = assertThrows(ExpressionException.class, () -> e.eval(symTable, heap));
         assertTrue(ex.getMessage().contains("not defined"));
     }
 }

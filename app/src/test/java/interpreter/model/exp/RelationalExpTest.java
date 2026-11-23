@@ -3,7 +3,9 @@ package interpreter.model.exp;
 import interpreter.exceptions.ExpressionException;
 import interpreter.exceptions.MyException;
 import interpreter.model.adt.IDictionary;
+import interpreter.model.adt.IHeap;
 import interpreter.model.adt.MyDictionary;
+import interpreter.model.adt.MyHeap;
 import interpreter.model.value.BoolValue;
 import interpreter.model.value.IValue;
 import interpreter.model.value.IntValue;
@@ -16,11 +18,12 @@ class RelationalExpTest {
     private static final BoolValue FALSE = new BoolValue(false);
 
     private IDictionary<String, IValue> symTable;
+    private final IHeap heap = new MyHeap();
 
     private static IExp num(int n) { return new ValueExp(new IntValue(n)); }
 
     private IValue eval(RelOp op, int left, int right) throws MyException {
-        return new RelationalExp(op, num(left), num(right)).eval(symTable);
+        return new RelationalExp(op, num(left), num(right)).eval(symTable, heap);
     }
 
     @BeforeEach
@@ -69,20 +72,20 @@ class RelationalExpTest {
         symTable.put("a", new IntValue(5));
         symTable.put("b", new IntValue(7));
         IExp e = new RelationalExp(RelOp.LT, new VarExp("a"), new VarExp("b"));
-        assertEquals(TRUE, e.eval(symTable));
+        assertEquals(TRUE, e.eval(symTable, heap));
     }
 
     @Test
     void nonIntegerFirstOperandThrows() {
         IExp e = new RelationalExp(RelOp.LT, new ValueExp(new BoolValue(true)), num(1));
-        var ex = assertThrows(ExpressionException.class, () -> e.eval(symTable));
+        var ex = assertThrows(ExpressionException.class, () -> e.eval(symTable, heap));
         assertEquals("first operand is not an integer", ex.getMessage());
     }
 
     @Test
     void nonIntegerSecondOperandThrows() {
         IExp e = new RelationalExp(RelOp.GE, num(1), new ValueExp(new BoolValue(false)));
-        var ex = assertThrows(ExpressionException.class, () -> e.eval(symTable));
+        var ex = assertThrows(ExpressionException.class, () -> e.eval(symTable, heap));
         assertEquals("second operand is not an integer", ex.getMessage());
     }
 
