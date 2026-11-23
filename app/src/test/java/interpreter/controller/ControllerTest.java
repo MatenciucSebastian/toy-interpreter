@@ -3,8 +3,14 @@ package interpreter.controller;
 import interpreter.exceptions.MyException;
 import interpreter.exceptions.StatementException;
 import interpreter.model.PrgState;
+import interpreter.model.exp.ValueExp;
+import interpreter.model.stmt.CompStmt;
 import interpreter.model.stmt.IStmt;
+import interpreter.model.stmt.NewStmt;
 import interpreter.model.stmt.NopStmt;
+import interpreter.model.stmt.VarDeclStmt;
+import interpreter.model.type.IntType;
+import interpreter.model.type.RefType;
 import interpreter.model.value.IntValue;
 import interpreter.repository.Repository;
 import interpreter.view.Examples;
@@ -12,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ControllerTest {
@@ -58,18 +65,28 @@ class ControllerTest {
     }
 
     @Test
-    void logFileContainsTheFourSectionsInOrder() throws Exception {
+    void logFileContainsTheFiveSectionsInOrder() throws Exception {
         run(Examples.EX1);
         String log = Files.readString(dir.resolve("log.txt"));
         int a = log.indexOf("ExeStack:"), b = log.indexOf("SymTable:"),
-                c = log.indexOf("Out:"), d = log.indexOf("FileTable:");
-        assertTrue(0 <= a && a < b && b < c && c < d);
+                c = log.indexOf("Out:"), d = log.indexOf("FileTable:"), e = log.indexOf("Heap:");
+        assertTrue(0 <= a && a < b && b < c && c < d && d < e);
     }
 
     @Test
-    void logFileHasTheInitialStateAndOneStateAfterEveryStep() throws Exception {
-        run(Examples.EX1);
+    void logFileHasTheInitialStateAndTwoStatesAfterEveryStep() throws Exception {
+        run(Examples.EX1);   // 5 steps, each logged before and after the garbage collection
         String log = Files.readString(dir.resolve("log.txt"));
-        assertEquals(6, log.lines().filter("ExeStack:"::equals).count());
+        assertEquals(1 + 2 * 5, log.lines().filter("ExeStack:"::equals).count());
+    }
+
+    @Test
+    void theGarbageCollectorRunsAfterEveryStep() throws MyException {
+        // Ref int v; new(v, 20); new(v, 30) - location 1 is garbage after the second new
+        IStmt program = new CompStmt(new VarDeclStmt("v", new RefType(new IntType())),
+                new CompStmt(new NewStmt("v", new ValueExp(new IntValue(20))),
+                        new NewStmt("v", new ValueExp(new IntValue(30)))));
+        PrgState state = run(program);
+        assertEquals(Map.of(2, new IntValue(30)), state.getHeap().getContent());
     }
 }
